@@ -1,34 +1,29 @@
 import json
 import boto3
 
-db_client = boto3.client('dynamodb')
-ses_client = boto3.client('ses')
-s3_client = boto3.client("s3")
+db_client = boto3.client("dynamodb")
+ses_client = boto3.client("ses")
 s3_client = boto3.client("s3")
 
 
 def lambda_pet_statistics(event, context):
-    pets = ['Brutus', 'Borys', 'Majkus', 'Milusia']
+    pets = ["Brutus", "Borys", "Majkus", "Milusia"]
     pet_statistics_dict = {}
     for pet in pets:
         response = db_client.query(
-            TableName='pet_statistics',
-            Select='COUNT',
-            KeyConditionExpression='PK = :PK',
-            ExpressionAttributeValues={
-                ':PK': {'S': pet}
-            })
-        pet_statistics_dict[pet] = response['Count']
+            TableName="pet_statistics",
+            Select="COUNT",
+            KeyConditionExpression="PK = :PK",
+            ExpressionAttributeValues={":PK": {"S": pet}},
+        )
+        pet_statistics_dict[pet] = response["Count"]
 
     print(pet_statistics_dict)
 
     message = lambda_prepare_message(pet_statistics_dict)
     lambda_sent_pet(message)
 
-    return {
-        'statusCode': 200,
-        'body': json.dumps('Hello from Lambda!')
-    }
+    return {"statusCode": 200, "body": json.dumps("Hello from Lambda!")}
 
 
 def get_object_from_s3(pet_statistics_dict):
@@ -38,9 +33,10 @@ def get_object_from_s3(pet_statistics_dict):
     object_key = f"{max_pet_statistics_dict}.jpg"
 
     url = s3_client.generate_presigned_url(
-        'get_object',
-        Params={'Bucket': s3_bucket_name, 'Key': object_key},
-        ExpiresIn=3600)
+        "get_object",
+        Params={"Bucket": s3_bucket_name, "Key": object_key},
+        ExpiresIn=3600,
+    )
 
     return url
 
@@ -58,20 +54,13 @@ def lambda_prepare_message(pet_statistics_dict):
 
 def lambda_sent_pet(message):
     ses_response = ses_client.send_email(
-        Source='alek.fidelus@gmail.com',
+        Source="alek.fidelus@gmail.com",
         Destination={
-            'ToAddresses': ['magdalena.bialik@gmail.com', 'alek.fidelus@gmail.com']
+            "ToAddresses": ["magdalena.bialik@gmail.com", "alek.fidelus@gmail.com"]
         },
         Message={
-            'Subject': {
-                'Data': 'Statystyki zwierzatek dnia'
-            },
-
-            'Body': {
-                'Text': {
-                    'Data': message
-                }
-            }
-        }
+            "Subject": {"Data": "Statystyki zwierzatek dnia"},
+            "Body": {"Text": {"Data": message}},
+        },
     )
     return ses_response
