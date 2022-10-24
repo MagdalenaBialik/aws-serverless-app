@@ -50,7 +50,9 @@ def lambda_prepare_message(pet_statistics_dict):
 
     message = "Overall Pet Statistics: \n"
     for nazwa_zwierzatka, wynik in pet_statistics_dict.items():
-        message += f"{nazwa_zwierzatka}:{wynik}\n"
+        message += f"{nazwa_zwierzatka}:{wynik}\n\n"
+
+    message += "THE BEST PET IS --> " f"{max(pet_statistics_dict, key=pet_statistics_dict.get)} \n"
 
     message += get_object_from_s3(pet_statistics_dict)
     return message
